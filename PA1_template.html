@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>summarizing total steps per date</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<p>library(ggplot2)
+library(plyr)
+activity &lt;- read.csv(&ldquo;activity.csv&rdquo;)
+activity$day &lt;- weekdays(as.Date(activity$date))
+activity$DateTime&lt;- as.POSIXct(activity$date, format=&ldquo;%Y-%m-%d&rdquo;)</p>
+
+<p>##pulling data without nas
+clean &lt;- activity[!is.na(activity$steps),]</p>
+
+<h2>summarizing total steps per date</h2>
+
+<p>sumTable &lt;- aggregate(activity$steps ~ activity$date, FUN=sum, )
+colnames(sumTable)&lt;- c(&ldquo;Date&rdquo;, &ldquo;Steps&rdquo;)</p>
+
+<h2>Creating the historgram of total steps per day</h2>
+
+<p>hist(sumTable$Steps, breaks=5, xlab=&ldquo;Steps&rdquo;, main = &ldquo;Total Steps per Day&rdquo;)</p>
+
+<h2>Mean of Steps</h2>
+
+<p>as.integer(mean(sumTable$Steps))</p>
+
+<h2>Median of Steps</h2>
+
+<p>as.integer(median(sumTable$Steps))
+library(plyr)
+library(ggplot2)
+##pulling data without nas
+clean &lt;- activity[!is.na(activity$steps),]</p>
+
+<p>##create average number of steps per interval
+intervalTable &lt;- ddply(clean, .(interval), summarize, Avg = mean(steps))</p>
+
+<p>##Create line plot of average number of steps per interval
+p &lt;- ggplot(intervalTable, aes(x=interval, y=Avg), xlab = &ldquo;Interval&rdquo;, ylab=&ldquo;Average Number of Steps&rdquo;)
+p + geom_line()+xlab(&ldquo;Interval&rdquo;)+ylab(&ldquo;Average Number of Steps&rdquo;)+ggtitle(&ldquo;Average Number of Steps per Interval&rdquo;)</p>
+
+<p>##Maximum steps by interval
+maxSteps &lt;- max(intervalTable$Avg)
+##Which interval contains the maximum average number of steps
+intervalTable[intervalTable$Avg==maxSteps,1]</p>
+
+<p>##Number of NAs in original data set
+nrow(activity[is.na(activity$steps),])</p>
+
+<h2>Create the average number of steps per weekday and interval</h2>
+
+<p>avgTable &lt;- ddply(clean, .(interval, day), summarize, Avg = mean(steps))</p>
+
+<h2>Create dataset with all NAs for substitution</h2>
+
+<p>nadata&lt;- activity[is.na(activity$steps),]</p>
+
+<h2>Merge NA data with average weekday interval for substitution</h2>
+
+<p>newdata&lt;-merge(nadata, avgTable, by=c(&ldquo;interval&rdquo;, &ldquo;day&rdquo;))</p>
+
+<h2>Reorder the new substituded data in the same format as clean data set</h2>
+
+<p>newdata2&lt;- newdata[,c(6,4,1,2,5)]
+colnames(newdata2)&lt;- c(&ldquo;steps&rdquo;, &ldquo;date&rdquo;, &ldquo;interval&rdquo;, &ldquo;day&rdquo;, &ldquo;DateTime&rdquo;)</p>
+
+<p>##Merge the NA averages and non NA data together
+mergeData &lt;- rbind(clean, newdata2)
+##Create sum of steps per date to compare with step 1
+sumTable2 &lt;- aggregate(mergeData$steps ~ mergeData$date, FUN=sum, )
+colnames(sumTable2)&lt;- c(&ldquo;Date&rdquo;, &ldquo;Steps&rdquo;)</p>
+
+<h2>Mean of Steps with NA data taken care of</h2>
+
+<p>as.integer(mean(sumTable2$Steps))</p>
+
+<h2>Median of Steps with NA data taken care of</h2>
+
+<p>as.integer(median(sumTable2$Steps))</p>
+
+<h2>Creating the histogram of total steps per day, categorized by data set to show impact</h2>
+
+<p>hist(sumTable2$Steps, breaks=5, xlab=&ldquo;Steps&rdquo;, main = &ldquo;Total Steps per Day with NAs Fixed&rdquo;, col=&ldquo;Black&rdquo;)
+hist(sumTable$Steps, breaks=5, xlab=&ldquo;Steps&rdquo;, main = &ldquo;Total Steps per Day with NAs Fixed&rdquo;, col=&ldquo;Grey&rdquo;, add=T)
+legend(&ldquo;topright&rdquo;, c(&ldquo;Imputed Data&rdquo;, &ldquo;Non-NA Data&rdquo;), fill=c(&ldquo;black&rdquo;, &ldquo;grey&rdquo;) )</p>
+
+<h2>Create new category based on the days of the week</h2>
+
+<p>mergeData$DayCategory &lt;- ifelse(mergeData$day %in% c(&ldquo;Saturday&rdquo;, &ldquo;Sunday&rdquo;), &ldquo;Weekend&rdquo;, &ldquo;Weekday&rdquo;)
+library(lattice) </p>
+
+<h2>Summarize data by interval and type of day</h2>
+
+<p>intervalTable2 &lt;- ddply(mergeData, .(interval, DayCategory), summarize, Avg = mean(steps))</p>
+
+<p>##Plot data in a panel plot
+xyplot(Avg~interval|DayCategory, data=intervalTable2, type=&ldquo;l&rdquo;,  layout = c(1,2),
+       main=&ldquo;Average Steps per Interval Based on Type of Day&rdquo;, 
+       ylab=&ldquo;Average Number of Steps&rdquo;, xlab=&ldquo;Interval&rdquo;)</p>
+
+</body>
+
+</html>
